@@ -163,4 +163,94 @@ export default function CryptoDashboard() {
             // Generate fallback data based on current price
             const selectedCryptoData = cryptoData.find((crypto) => crypto.id === cryptoId)
             if (selectedCryptoData) {
-                const fallbackData = generateFall
+                const fallbackData = generateFallbackChartData(selectedCryptoData.current_price)
+                setChartData(fallbackData)
+            }
+        } finally {
+            setChartLoading(false)
+        }
+    }
+
+    const generateFallbackChartData = (currentPrice: number): ChartData[] => {
+        const data: ChartData[] = []
+        const now = new Date()
+        const points = 168 // 7 days * 24 hours
+
+        for (let i = 0; i < points; i++) {
+            const timestamp = now.getTime() - (points - i) * 3600000
+            const variation = (Math.random() - 0.5) * 0.1 // ±5% variation
+            const price = currentPrice * (1 + variation * (i / points))
+            const volatility = price * 0.02
+
+            const open = i > 0 ? data[i - 1].close || price : price
+            const high = price + Math.random() * volatility
+            const low = price - Math.random() * volatility
+            const close = price
+
+            data.push({
+                timestamp,
+                date: new Date(timestamp).toLocaleDateString(),
+                time: new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                price,
+                open,
+                high: Math.max(high, open, close),
+                low: Math.min(low, open, close),
+                close,
+            })
+        }
+
+        return data
+    }
+
+    useEffect(() => {
+        fetchCryptoData()
+    }, [])
+
+    useEffect(() => {
+        if (cryptoData.length > 0) {
+            fetchChartData(selectedCrypto)
+        }
+    }, [selectedCrypto, chartType, cryptoData])
+
+    const handleCryptoSelect = (cryptoId: string) => {
+        setSelectedCrypto(cryptoId)
+    }
+
+    if (error) {
+        return (
+            <ErrorLoadingData error={error} fetchCryptoData={fetchCryptoData} />
+        )
+    }
+
+    return (
+        <div className="min-h-screen bg-background p-4">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h1 className="text-4xl font-bold tracking-tight">Crypto Dashboard</h1>
+                        <p className="text-muted-foreground mt-2">Real-time cryptocurrency prices and market data</p>
+                    </div>
+                    <div className="text-right">
+                        <Button variant="outline" onClick={fetchCryptoData} disabled={loading}>
+                            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                            Refresh
+                        </Button>
+                        {lastUpdated && (
+                            <p className="text-sm text-muted-foreground mt-2">Last updated: {lastUpdated.toLocaleTimeString()}</p>
+                        )}
+                    </div>
+                </div>
+
+                {/* Chart Section */}
+                <Chart chartType={"line"} setChartType={setChartType} chartError={chartError} chartLoading={chartLoading} chartData={chartData} cryptoData={cryptoData} selectedCrypto={selectedCrypto} />
+
+                {/* Crypto Cards Grid */}
+                {loading ? (
+                    <Loading />
+                ) : (
+                    <CryptoCard cryptoData={cryptoData} selectedCrypto={selectedCrypto} handleCryptoSelect={handleCryptoSelect} />
+                )}
+            </div>
+        </div>
+    )
+}

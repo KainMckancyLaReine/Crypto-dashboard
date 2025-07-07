@@ -1,11 +1,20 @@
 /* eslint-disable @next/next/no-img-element */
-import { BarChart3, TrendingUpIcon } from "lucide-react"
+import { BarChart3, TrendingUp } from "lucide-react"
 import { Button } from "./ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card"
 import ChartError from "./ChartError"
 import ChartLoading from "./ChartLoading"
-import { ChartContainer, ChartTooltip } from "./ui/chart"
-import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts"
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+    BarChart,
+    Bar,
+    Tooltip as ChartTooltip
+} from "recharts"
 import { formatPercentage, formatPrice } from "@/lib/format"
 
 interface ChartData {
@@ -22,25 +31,25 @@ interface ChartData {
 type ChartType = "line" | "candlestick"
 
 interface Crypto {
-    id: string;
-    name: string;
-    symbol: string;
-    image: string;
-    current_price: number;
-    price_change_percentage_24h: number;
-    market_cap_rank: number;
-    market_cap: number;
-    total_volume: number;
+    id: string
+    name: string
+    symbol: string
+    image: string
+    current_price: number
+    price_change_percentage_24h: number
+    market_cap_rank: number
+    market_cap: number
+    total_volume: number
 }
 
-interface Chart {
-    cryptoData: Crypto[];
-    selectedCrypto: string;
-    chartType: ChartType;
-    setChartType: (type: ChartType) => void;
-    chartError: string | null;
-    chartLoading: boolean;
-    chartData: ChartData[];
+interface ChartProps {
+    cryptoData: Crypto[]
+    selectedCrypto: string
+    chartType: ChartType
+    setChartType: (type: ChartType) => void
+    chartError: string | null
+    chartLoading: boolean
+    chartData: ChartData[]
 }
 
 const CandlestickChart = ({ data }: { data: ChartData[] }) => {
@@ -81,14 +90,21 @@ const CandlestickChart = ({ data }: { data: ChartData[] }) => {
                         return null
                     }}
                 />
-                <Bar dataKey="high" fill="hsl(var(--chart-1))" opacity={0.6} />
+                <Bar dataKey="high" fill="#3b82f6" opacity={0.6} />
             </BarChart>
         </ResponsiveContainer>
     )
 }
 
-export default function Chart({ cryptoData, selectedCrypto, chartType, setChartType, chartError, chartLoading, chartData }: Chart) {
-
+export default function Chart({
+                                  cryptoData,
+                                  selectedCrypto,
+                                  chartType,
+                                  setChartType,
+                                  chartError,
+                                  chartLoading,
+                                  chartData
+                              }: ChartProps) {
     const getSelectedCryptoData = () => {
         return cryptoData.find((crypto) => crypto.id === selectedCrypto)
     }
@@ -103,19 +119,25 @@ export default function Chart({ cryptoData, selectedCrypto, chartType, setChartT
                         {selectedCryptoInfo && (
                             <>
                                 <img
-                                    src={selectedCryptoInfo.image || "/placeholder.svg"}
+                                    src={selectedCryptoInfo.image}
                                     alt={selectedCryptoInfo.name}
                                     className="w-8 h-8 rounded-full"
+                                    width={32}
+                                    height={32}
                                 />
                                 <div>
                                     <CardTitle className="text-xl">{selectedCryptoInfo.name} Price Chart</CardTitle>
                                     <p className="text-muted-foreground">
                                         {formatPrice(selectedCryptoInfo.current_price)}
                                         <span
-                                            className={`ml-2 ${selectedCryptoInfo.price_change_percentage_24h >= 0 ? "text-green-500" : "text-red-500"}`}
+                                            className={`ml-2 ${
+                                                selectedCryptoInfo.price_change_percentage_24h >= 0
+                                                    ? "text-green-500"
+                                                    : "text-red-500"
+                                            }`}
                                         >
-                                            {formatPercentage(selectedCryptoInfo.price_change_percentage_24h)}
-                                        </span>
+                      {formatPercentage(selectedCryptoInfo.price_change_percentage_24h)}
+                    </span>
                                     </p>
                                 </div>
                             </>
@@ -127,7 +149,7 @@ export default function Chart({ cryptoData, selectedCrypto, chartType, setChartT
                             size="sm"
                             onClick={() => setChartType("line")}
                         >
-                            <TrendingUpIcon className="w-4 h-4 mr-2" />
+                            <TrendingUp className="w-4 h-4 mr-2" />
                             Line
                         </Button>
                         <Button
@@ -142,26 +164,20 @@ export default function Chart({ cryptoData, selectedCrypto, chartType, setChartT
                 </div>
             </CardHeader>
             <CardContent>
-                {chartError && (
-                    <ChartError />
-                )}
+                {chartError && <ChartError />}
                 {chartLoading ? (
                     <ChartLoading />
                 ) : (
-                    <ChartContainer
-                        config={{
-                            price: {
-                                label: "Price",
-                                color: "#3b82f6",
-                            },
-                        }}
-                        className="h-[400px] w-full"
-                    >
+                    <div className="h-[400px] w-full">
                         {chartType === "line" ? (
-                            <ResponsiveContainer width="100%" height={400}>
+                            <ResponsiveContainer width="100%" height="100%">
                                 <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="time" tick={{ fontSize: 12 }} interval={Math.floor(chartData.length / 8)} />
+                                    <XAxis
+                                        dataKey="time"
+                                        tick={{ fontSize: 12 }}
+                                        interval={Math.floor(chartData.length / 8)}
+                                    />
                                     <YAxis
                                         tick={{ fontSize: 12 }}
                                         domain={["dataMin - 100", "dataMax + 100"]}
@@ -183,13 +199,19 @@ export default function Chart({ cryptoData, selectedCrypto, chartType, setChartT
                                             return null
                                         }}
                                     />
-                                    <Line type="monotone" dataKey="price" stroke="var(--color-price)" strokeWidth={2} dot={false} />
+                                    <Line
+                                        type="monotone"
+                                        dataKey="price"
+                                        stroke="#3b82f6"
+                                        strokeWidth={2}
+                                        dot={false}
+                                    />
                                 </LineChart>
                             </ResponsiveContainer>
                         ) : (
                             <CandlestickChart data={chartData} />
                         )}
-                    </ChartContainer>
+                    </div>
                 )}
             </CardContent>
         </Card>
